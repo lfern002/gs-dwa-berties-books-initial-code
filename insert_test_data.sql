@@ -1,5 +1,19 @@
-# Insert data into the tables
+-- insert_test_data.sql
 
-USE myBookshop;
+-- Insert test users
+INSERT INTO users (username, password) VALUES ('user1', 'password1');
+INSERT INTO users (username, password) VALUES ('user2', 'password2');
 
-INSERT INTO books (name, price)VALUES('database book', 40.25),('Node.js book', 25.00), ('Express book', 31.99) ;
+-- Insert test topics
+INSERT INTO topics (topic_name) VALUES ('Topic 1');
+INSERT INTO topics (topic_name) VALUES ('Topic 2');
+
+-- Assign users to topics (Memberships)
+INSERT INTO memberships (user_id, topic_id) VALUES (1, 1);
+INSERT INTO memberships (user_id, topic_id) VALUES (2, 2);
+
+-- Insert test posts
+INSERT INTO posts (user_id, topic_id, text) VALUES (1, 1, 'Post 1 in Topic 1');
+INSERT INTO posts (user_id, topic_id, text) VALUES (2, 2, 'Post 1 in Topic 2');
+INSERT INTO posts (user_id, topic_id, text) VALUES (1, 1, 'Post 2 in Topic 1');
+INSERT INTO posts (user_id, topic_id, text) VALUES (2, 2, 'Post 2 in Topic 2');

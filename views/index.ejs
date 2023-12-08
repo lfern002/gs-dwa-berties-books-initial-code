@@ -1,13 +1,57 @@
-<!doctype html>
-<html>
-  <head>
-    <title>Welcome to <%=shopName%></title>
-    <link rel="stylesheet"  type="text/css" href="/main.css" />
-  </head>
-  <body>
-    <h1>Welcome to <%=shopName%></h1>
-    <p><a href="about">About <%=shopName%></a></p>
-    <p><a href="search">Search for books</a></p>
-    <p><a href="register">Register with us</a></p>
-  </body>
+<!-- views/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            padding: 10px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #fff;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #444;
+            padding: 10px;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 15px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Forum!</h1>
+    </header>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/add-post">Add Post</a>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+        <a href="/posts">Posts</a>
+    </nav>
+
+    <!-- Display forum data as needed -->
+</body>
 </html>

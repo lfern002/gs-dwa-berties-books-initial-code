@@ -1,32 +1,142 @@
-// Import the modules we need
-var express = require ('express')
-var ejs = require('ejs')
-var bodyParser= require ('body-parser')
+// index.js
 
-// Create the express application object
-const app = express()
-const port = 8000
-app.use(bodyParser.urlencoded({ extended: true }))
+const express = require('express');
+const mysql = require('mysql');
+const bcrypt = require('bcrypt');
+const session = require('express-session');
+const app = express();
+const port = 3000;
 
-// Set up css
-app.use(express.static(__dirname + '/public'));
 
-// Set the directory where Express will pick up HTML files
-// __dirname will get the current directory
-app.set('views', __dirname + '/views');
+const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'your-username',
+    password: 'your-password',
+    database: 'forum_db',
+    insecureAuth: true,
+});
 
-// Tell Express that we want to use EJS as the templating engine
+
+
+app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
-// Tells Express how we should process html files
-// We want to use EJS's rendering engine
-app.engine('html', ejs.renderFile);
+app.use(session({
+    secret: 'your-secret-key',
+    resave: false,
+    saveUninitialized: true,
+}));
 
-// Define our data
-var shopData = {shopName: "Bertie's Books"}
+const checkLoggedIn = (req, res, next) => {
+    if (req.session.userId) {
+        next();
+    } else {
+        res.redirect('/login');
+    }
+};
 
-// Requires the main.js file inside the routes folder passing in the Express app and data as arguments.  All the routes will go in this file
-require("./routes/main")(app, shopData);
+// Navigation links
+const navLinks = [
+    { path: '/', text: 'Home' },
+    { path: '/about', text: 'About' },
+    { path: '/posts', text: 'Posts' },
+    { path: '/add-post', text: 'Add Post', loggedIn: true }, // Only show if logged in
+    { path: '/register', text: 'Register', loggedOut: true }, // Only show if logged out
+    { path: '/login', text: 'Login', loggedOut: true }, // Only show if logged out
+    { path: '/logout', text: 'Logout', loggedIn: true } // Only show if logged in
+];
 
-// Start the web app listening
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+app.use((req, res, next) => {
+    res.locals.navLinks = navLinks.map(link => ({ ...link, active: req.path === link.path }));
+    res.locals.user = req.session.user;
+    next();
+});
+
+app.get('/', (req, res) => {
+    res.render('index');
+});
+
+app.get('/about', (req, res) => {
+    res.render('about');
+});
+
+app.get('/posts', checkLoggedIn, (req, res) => {
+    connection.query('SELECT posts.*, users.username FROM posts JOIN users ON posts.user_id = users.user_id', (error, results) => {
+        if (error) throw error;
+        res.render('posts', { posts: results });
+    });
+});
+
+app.get('/register', (req, res) => {
+    res.render('register');
+});
+
+app.post('/register', (req, res) => {
+    const { username, password } = req.body;
+
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+        if (err) throw err;
+
+        connection.query('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword], (error, results) => {
+            if (error) throw error;
+
+            res.redirect('/login');
+        });
+    });
+});
+
+app.get('/login', (req, res) => {
+    res.render('login');
+});
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    connection.query('SELECT * FROM users WHERE username = ?', [username], (error, results) => {
+        if (error) throw error;
+
+        if (results.length > 0) {
+            const user = results[0];
+
+            bcrypt.compare(password, user.password, (err, result) => {
+                if (err) throw err;
+
+                if (result) {
+                    req.session.userId = user.user_id;
+                    req.session.user = user.username;
+
+                    res.redirect('/');
+                } else {
+                    res.redirect('/login');
+                }
+            });
+        } else {
+            res.redirect('/login');
+        }
+    });
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) throw err;
+        res.redirect('/');
+    });
+});
+
+app.get('/add-post', checkLoggedIn, (req, res) => {
+    res.render('add-post');
+});
+
+app.post('/add-post', checkLoggedIn, (req, res) => {
+    const { text } = req.body;
+    const userId = req.session.userId;
+
+    connection.query('INSERT INTO posts (user_id, text) VALUES (?, ?)', [userId, text], (error, results) => {
+        if (error) throw error;
+        res.redirect('/posts');
+    });
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
